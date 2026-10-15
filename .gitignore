@@ -1,0 +1,7 @@
+imports/
+exports/
+assets/
+work/
+*.tmp
+.env
+Thumbs.db

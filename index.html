@@ -1,0 +1,2546 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Video Workbench</title>
+  <style>
+    :root {
+      --paper: #f4f6f2;
+      --surface: #ffffff;
+      --surface-soft: #edf1ed;
+      --ink: #17221f;
+      --muted: #65706b;
+      --line: #d7dfd9;
+      --line-strong: #bdc9c1;
+      --accent: #e55235;
+      --accent-soft: #fff0eb;
+      --teal: #146f68;
+      --teal-soft: #e6f4f1;
+      --gold: #b97a08;
+      --gold-soft: #fff5d9;
+      --danger: #b42318;
+      --danger-soft: #fff0ee;
+      --shadow: 0 14px 40px rgba(23, 34, 31, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--paper);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", ui-sans-serif, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid rgba(20, 111, 104, 0.25);
+      outline-offset: 2px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-height: 70px;
+      padding: 12px clamp(18px, 4vw, 54px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 246, 242, 0.96);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border: 1px solid var(--ink);
+      border-radius: 7px;
+      background: var(--ink);
+      color: var(--surface);
+      font-family: Georgia, "Songti SC", serif;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .brand-copy span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .header-actions,
+    .toolbar,
+    .card-actions,
+    .mode-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 38px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+    }
+
+    .button:hover {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .button.primary:hover {
+      border-color: #c83f27;
+      background: #c83f27;
+    }
+
+    .button.ghost {
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .button.ghost:hover {
+      background: var(--surface-soft);
+    }
+
+    .button.danger {
+      border-color: #efc5bf;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .button.small {
+      min-height: 32px;
+      padding: 5px 9px;
+      font-size: 13px;
+    }
+
+    .button.icon-only {
+      width: 36px;
+      min-height: 36px;
+      padding: 6px;
+    }
+
+    .icon {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .library-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 24px;
+      width: min(1440px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 32px 0 60px;
+    }
+
+    .intro-panel,
+    .project-panel,
+    .workspace-sidebar,
+    .beat-board {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .intro-panel {
+      position: sticky;
+      top: 94px;
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .intro-heading {
+      padding: 26px;
+      border-bottom: 1px solid var(--line);
+      background: var(--ink);
+      color: var(--surface);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .intro-heading h1 {
+      max-width: 9em;
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: clamp(32px, 4vw, 48px);
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+    }
+
+    .intro-heading p {
+      margin: 18px 0 0;
+      color: #cbd5d1;
+      font-size: 14px;
+    }
+
+    .create-form {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field > span,
+    .field-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .input,
+    .textarea,
+    .select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .input,
+    .select {
+      min-height: 40px;
+      padding: 8px 10px;
+    }
+
+    .textarea {
+      min-height: 112px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    .input:hover,
+    .textarea:hover,
+    .select:hover {
+      border-color: #96a99e;
+    }
+
+    .input:focus,
+    .textarea:focus,
+    .select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(20, 111, 104, 0.09);
+    }
+
+    .input[data-invalid="true"],
+    .textarea[data-invalid="true"] {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .mode-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .mode-option {
+      position: relative;
+      display: grid;
+      gap: 6px;
+      min-height: 112px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+      cursor: pointer;
+    }
+
+    .mode-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mode-option strong {
+      font-size: 14px;
+    }
+
+    .mode-option span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .mode-option:has(input:checked) {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+      box-shadow: inset 0 0 0 1px var(--teal);
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+    }
+
+    .switch-row span {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .switch-row small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .switch-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--teal);
+    }
+
+    .project-panel {
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding: 20px;
+    }
+
+    .project-card {
+      display: grid;
+      gap: 15px;
+      min-height: 190px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .project-card:hover {
+      border-color: var(--line-strong);
+    }
+
+    .project-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .project-name-input {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .project-name-input:hover,
+    .project-name-input:focus {
+      border-bottom-color: var(--line-strong);
+      outline: 0;
+    }
+
+    .project-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .metric {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .project-footer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .project-footer small {
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      min-height: 26px;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pill.explainer {
+      border-color: #bdd8d3;
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+
+    .pill.expressive {
+      border-color: #f0d59d;
+      background: var(--gold-soft);
+      color: #8a5c06;
+    }
+
+    .pill.accent {
+      border-color: #efc3ba;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .empty-state {
+      padding: 56px 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 18px;
+      width: min(1500px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 60px;
+    }
+
+    .workspace-sidebar {
+      position: sticky;
+      top: 88px;
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .sidebar-block {
+      padding: 17px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-block:last-child {
+      border-bottom: 0;
+    }
+
+    .sidebar-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .project-title-input {
+      width: 100%;
+      min-height: 42px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .stats-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stat-row:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .stat-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat-row strong {
+      font-size: 14px;
+    }
+
+    .manuscript-box summary {
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .manuscript-box .textarea {
+      min-height: 180px;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    .beat-board {
+      min-width: 0;
+      overflow: hidden;
+      box-shadow: none;
+    }
+
+    .beat-board-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .beat-board-head h2 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .beat-board-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .beat-list {
+      display: grid;
+      gap: 0;
+      padding: 0 20px 20px;
+      background: var(--surface);
+    }
+
+    .beat-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .beat-card:first-child {
+      border-top: 1px solid var(--line);
+      margin-top: 16px;
+    }
+
+    .beat-card.dragging {
+      opacity: 0.45;
+    }
+
+    .beat-card.drag-over {
+      box-shadow: inset 0 3px 0 var(--accent);
+    }
+
+    .beat-rail {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 18px;
+      border-right: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .beat-rail::after {
+      position: absolute;
+      top: 48px;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--line-strong);
+      content: "";
+      transform: translateX(-50%);
+    }
+
+    .beat-number {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .drag-handle {
+      position: absolute;
+      bottom: 12px;
+      z-index: 2;
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      cursor: grab;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .beat-content {
+      min-width: 0;
+      padding: 16px 18px 20px;
+    }
+
+    .beat-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .beat-head-main {
+      min-width: 0;
+    }
+
+    .beat-preview {
+      display: -webkit-box;
+      max-width: 820px;
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.45;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .beat-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .beat-fields {
+      display: grid;
+      gap: 14px;
+      margin-top: 17px;
+      padding-top: 17px;
+      border-top: 1px solid var(--line);
+    }
+
+    .beat-grid {
+      display: grid;
+      grid-template-columns: 150px 130px minmax(160px, 1fr);
+      gap: 12px;
+    }
+
+    .beat-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .beat-field > span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .beat-field .textarea {
+      min-height: 82px;
+    }
+
+    .beat-field.text-field .textarea {
+      min-height: 112px;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .advanced-fields {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+    }
+
+    .advanced-fields summary {
+      padding: 11px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .advanced-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 0 12px 12px;
+    }
+
+    .advanced-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .code-input {
+      min-height: 130px;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+    }
+
+    .field-error {
+      min-height: 18px;
+      color: var(--danger);
+      font-size: 12px;
+    }
+
+    .beat-card.collapsed .beat-fields {
+      display: none;
+    }
+
+    .rotate-180 {
+      display: inline-flex;
+      transform: rotate(180deg);
+    }
+
+    .form-notice {
+      display: none;
+      padding: 10px 12px;
+      border: 1px solid #efc3ba;
+      border-radius: 7px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    .form-notice.visible {
+      display: block;
+    }
+
+    .save-indicator {
+      display: inline-flex;
+      min-width: 76px;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .save-indicator[data-state="saving"] {
+      border-color: #f0d59d;
+      background: var(--gold-soft);
+      color: var(--gold);
+    }
+
+    .save-indicator[data-state="error"] {
+      border-color: #efc3ba;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .workspace-header-title {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .workspace-header-title strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .confirm-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(23, 34, 31, 0.42);
+    }
+
+    .confirm-box {
+      width: min(460px, 100%);
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 28px 80px rgba(23, 34, 31, 0.25);
+    }
+
+    .confirm-box h3 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 23px;
+    }
+
+    .confirm-box p {
+      margin: 10px 0 20px;
+      color: var(--muted);
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .toast-stack {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 100;
+      display: grid;
+      gap: 8px;
+      width: min(360px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 12px 14px;
+      border: 1px solid var(--line-strong);
+      border-left: 4px solid var(--teal);
+      border-radius: 7px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      animation: toast-in 180ms ease-out;
+    }
+
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 1050px) {
+      .library-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .intro-panel {
+        position: static;
+      }
+
+      .workspace-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .sidebar-block {
+        border-right: 1px solid var(--line);
+        border-bottom: 0;
+      }
+
+      .sidebar-block:last-child {
+        border-right: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app-header {
+        position: static;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      .header-actions .button {
+        flex: 1 1 auto;
+      }
+
+      .project-grid,
+      .mode-picker,
+      .workspace-sidebar,
+      .beat-grid,
+      .advanced-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-block {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .beat-card {
+        grid-template-columns: 40px minmax(0, 1fr);
+      }
+
+      .beat-content {
+        padding: 14px 12px 18px;
+      }
+
+      .beat-head {
+        flex-direction: column;
+      }
+
+      .card-actions {
+        width: 100%;
+      }
+
+      .card-actions .button {
+        flex: 1 1 auto;
+      }
+
+      .advanced-grid .wide {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app-shell"></div>
+  <input id="json-file-input" type="file" accept=".json,application/json" hidden>
+  <div id="confirm-root"></div>
+  <div id="toast-root" class="toast-stack" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+
+    const STORAGE_KEY = "video-workbench:v1";
+    const SCHEMA_VERSION = 1;
+
+    const MODES = {
+      explainer: {
+        label: "观点解释",
+        short: "解释",
+        description: "科普、信息差和个人观点"
+      },
+      expressive: {
+        label: "主观表达",
+        short: "表达",
+        description: "书、电影、音乐与文艺心得"
+      }
+    };
+
+    const VISUAL_KINDS = {
+      talking_head: "口播",
+      b_roll: "实拍空镜",
+      image: "图片",
+      screen_recording: "屏幕录制",
+      text_card: "文字卡",
+      chart: "图表",
+      animation: "动画",
+      archive: "资料影像",
+      abstract: "抽象意象",
+      mixed: "混合素材",
+      none: "无画面"
+    };
+
+    const ICONS = {
+      plus: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>',
+      download: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 21h14"/></svg>',
+      upload: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9m0 0 4 4m-4-4-4 4"/><path d="M5 3h14"/></svg>',
+      copy: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
+      trash: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 14h8l1-14M10 11v6m4-6v6"/></svg>',
+      up: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>',
+      down: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+      grip: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="17" r="1"/><circle cx="15" cy="17" r="1"/></svg>',
+      back: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>',
+      file: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg>',
+      markdown: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M7 15V9l3 3 3-3v6m3-6v6m-2-2 2 2 2-2"/></svg>',
+      chevron: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+      refresh: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M19 11a7 7 0 1 0 1 5"/></svg>'
+    };
+
+    const state = {
+      data: null,
+      runtime: {
+        saveTimer: null,
+        chartDrafts: {},
+        collapsedBeats: new Set(),
+        pendingDelete: null,
+        confirmAction: null,
+        dragBeatId: null
+      }
+    };
+
+    function uid(prefix) {
+      return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, function (char) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[char];
+      });
+    }
+
+    function getProject() {
+      return state.data.projects.find(function (project) {
+        return project.id === state.data.activeProjectId;
+      }) || null;
+    }
+
+    function getBeat(project, beatId) {
+      return project.beats.find(function (beat) {
+        return beat.id === beatId;
+      }) || null;
+    }
+
+    function createBeat(mode, text, overrides) {
+      return Object.assign({
+        id: uid("beat"),
+        mode: MODES[mode] ? mode : "explainer",
+        text: text || "",
+        duration: estimateDuration(text || ""),
+        visual_kind: "b_roll",
+        visual_brief: "",
+        prompt: "",
+        chart_data: null,
+        audio_hint: "",
+        source: "",
+        rights: "待确认"
+      }, overrides || {});
+    }
+
+    function createSampleProject() {
+      const mode = "explainer";
+      const beats = [
+        createBeat(mode, "为什么有些内容刚开口，你就愿意继续听下去？答案往往不是信息更多，而是它先留下了一个恰到好处的信息缺口。", {
+          duration: 8,
+          visual_kind: "text_card",
+          visual_brief: "黑底白字逐句出现，最后停在一个未闭合的问号上。",
+          prompt: "极简文字卡，高对比，留出大面积空白，不要装饰性光效。",
+          audio_hint: "低频节拍轻入，语句结束后留半秒空白。",
+          source: "本示例为原创演示文案。",
+          rights: "原创"
+        }),
+        createBeat(mode, "信息缺口不是故意卖关子，而是把观众已经知道的事实与尚未理解的因果关系放在一起。", {
+          duration: 7,
+          visual_kind: "abstract",
+          visual_brief: "两个几何区域中间出现细窄裂缝，裂缝随后被一段文字连接。",
+          prompt: "抽象信息图动画，暖灰背景，橙红裂缝，克制、清晰。",
+          audio_hint: "打字机式短音效只出现在关键词上。",
+          source: "示例概念，仅用于演示字段结构。",
+          rights: "原创"
+        }),
+        createBeat(mode, "当缺口被数据量化时，观众更容易判断它是否值得继续关注。", {
+          duration: 6,
+          visual_kind: "chart",
+          visual_brief: "用三条示例数据对比缺口大小，右侧保留一句结论。",
+          prompt: "简洁横向条形图，标签清晰，避免三维和阴影。",
+          chart_data: {
+            kind: "bar",
+            title: "示例：信息缺口强度",
+            categories: ["背景", "冲突", "后果"],
+            series: [
+              {
+                name: "示例值",
+                values: [42, 76, 63]
+              }
+            ],
+            unit: "示例分",
+            highlight: "冲突",
+            note: "数据仅用于展示手工 chart_data 的存储方式。",
+            source_note: "示例数据"
+          },
+          audio_hint: "音乐降低一档，给数据留出阅读空间。",
+          source: "示例数据，不代表真实统计。",
+          rights: "原创示例数据"
+        }),
+        createBeat(mode, "所以，好的开场并不急着把答案全部交出来，它只负责让答案变得非知道不可。", {
+          duration: 7,
+          visual_kind: "b_roll",
+          visual_brief: "书页翻动、镜头推进、人物停顿后继续说话，最后回到文字卡。",
+          prompt: "自然窗光，中近景，手持轻微呼吸感，不要炫技运镜。",
+          audio_hint: "环境声回到正常音量，最后一句话后停顿一秒。",
+          source: "本示例为原创演示文案。",
+          rights: "原创"
+        })
+      ];
+
+      return {
+        id: uid("project"),
+        name: "示例：好内容如何制造信息缺口",
+        mode,
+        manuscript: beats.map(function (beat) {
+          return beat.text;
+        }).join("\n\n"),
+        beats,
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+    }
+
+    function makeInitialState() {
+      const project = createSampleProject();
+      return {
+        schemaVersion: SCHEMA_VERSION,
+        projects: [project],
+        activeProjectId: null,
+        ui: {
+          activeView: "library",
+          lastSaveStatus: "saved",
+          exampleSeeded: true
+        }
+      };
+    }
+
+    function isValidState(value) {
+      return value
+        && typeof value === "object"
+        && value.schemaVersion === SCHEMA_VERSION
+        && Array.isArray(value.projects)
+        && value.ui
+        && typeof value.ui === "object";
+    }
+
+    function loadState() {
+      let raw = null;
+      try {
+        raw = localStorage.getItem(STORAGE_KEY);
+      } catch (error) {
+        state.data = makeInitialState();
+        showToast("浏览器拒绝读取 localStorage，当前修改可能无法保存。", "error");
+        return;
+      }
+
+      if (!raw) {
+        state.data = makeInitialState();
+        persistNow(true);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!isValidState(parsed)) {
+          throw new Error("数据结构无效");
+        }
+        state.data = parsed;
+        state.data.ui.lastSaveStatus = "saved";
+      } catch (error) {
+        state.data = makeInitialState();
+        showToast("localStorage 数据无法读取，已加载示例项目。原数据未被主动覆盖。", "error");
+      }
+    }
+
+    function updateSaveIndicator() {
+      document.querySelectorAll("[data-save-indicator]").forEach(function (node) {
+        const status = state.data.ui.lastSaveStatus || "saved";
+        node.dataset.state = status;
+        node.textContent = status === "saving" ? "保存中" : status === "error" ? "保存失败" : "已保存";
+      });
+    }
+
+    function scheduleSave() {
+      state.data.ui.lastSaveStatus = "saving";
+      updateSaveIndicator();
+      window.clearTimeout(state.runtime.saveTimer);
+      state.runtime.saveTimer = window.setTimeout(function () {
+        persistNow();
+      }, 500);
+    }
+
+    function persistNow(silent) {
+      window.clearTimeout(state.runtime.saveTimer);
+      state.runtime.saveTimer = null;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+        state.data.ui.lastSaveStatus = "saved";
+        updateSaveIndicator();
+        if (!silent) {
+          updateSummary();
+        }
+        return true;
+      } catch (error) {
+        state.data.ui.lastSaveStatus = "error";
+        updateSaveIndicator();
+        showToast("保存失败：localStorage 可能已满或被浏览器禁止。当前页面不会覆盖上一次成功保存的数据。", "error", 6000);
+        return false;
+      }
+    }
+
+    function markProjectUpdated(project) {
+      if (project) {
+        project.updatedAt = nowIso();
+      }
+      scheduleSave();
+    }
+
+    function estimateDuration(text) {
+      const normalized = String(text || "").replace(/\s+/g, "");
+      if (!normalized) {
+        return 4;
+      }
+      const latinWords = (String(text).match(/[A-Za-z0-9]+/g) || []).length;
+      const units = normalized.length + latinWords * 1.5;
+      return Math.max(2, Math.min(45, Math.round(units / 4.2)));
+    }
+
+    function splitManuscript(text) {
+      const normalized = String(text || "").replace(/\r\n/g, "\n").trim();
+      if (!normalized) {
+        return [""];
+      }
+
+      const blocks = normalized.split(/\n\s*\n/).map(function (block) {
+        return block.trim();
+      }).filter(Boolean);
+      const chunks = [];
+
+      blocks.forEach(function (block) {
+        const normalizedBlock = block.replace(/\.(?=\s|$)/g, ".\n");
+        normalizedBlock.split(/\n+/).forEach(function (line) {
+          const sentences = line.match(/[^。！？!?；;\n]+[。！？!?；;]?/g) || [line];
+          sentences.forEach(function (sentence) {
+            const clean = sentence.trim();
+            if (clean) {
+              chunks.push(clean);
+            }
+          });
+        });
+      });
+
+      return chunks.length ? chunks : [normalized];
+    }
+
+    function projectDuration(project) {
+      return project.beats.reduce(function (sum, beat) {
+        const value = Number(beat.duration);
+        return sum + (Number.isFinite(value) ? value : 0);
+      }, 0);
+    }
+
+    function formatDuration(value) {
+      const seconds = Math.max(0, Number(value) || 0);
+      const minutes = Math.floor(seconds / 60);
+      const remainder = Math.round((seconds % 60) * 10) / 10;
+      return minutes ? `${minutes}分${remainder}秒` : `${remainder}秒`;
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return "未知";
+      }
+      try {
+        return new Intl.DateTimeFormat("zh-CN", {
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(new Date(value));
+      } catch (error) {
+        return "未知";
+      }
+    }
+
+    function safeFilename(value) {
+      const text = String(value || "video-workbench")
+        .replace(/[\\/:*?"<>|]/g, "-")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      return text || "video-workbench";
+    }
+
+    function dateStamp() {
+      const date = new Date();
+      const pad = function (value) {
+        return String(value).padStart(2, "0");
+      };
+      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+    }
+
+    function modePill(mode, extraClass) {
+      const config = MODES[mode] || MODES.explainer;
+      return `<span class="pill ${escapeHtml(extraClass || mode)}">${escapeHtml(config.label)}</span>`;
+    }
+
+    function renderApp() {
+      if (state.data.ui.activeView === "workspace" && getProject()) {
+        renderWorkspace();
+      } else {
+        state.data.ui.activeView = "library";
+        renderLibrary();
+      }
+      updateSaveIndicator();
+    }
+
+    function renderLibrary() {
+      const app = document.getElementById("app");
+      const projects = state.data.projects.slice().sort(function (a, b) {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+
+      app.innerHTML = `
+        <header class="app-header">
+          <div class="brand">
+            <div class="brand-mark">VW</div>
+            <div class="brand-copy">
+              <strong>Video Workbench</strong>
+              <span>本地视频制片工作台</span>
+            </div>
+          </div>
+          <div class="header-actions">
+            <span class="save-indicator" data-save-indicator data-state="saved">已保存</span>
+            <button class="button" type="button" data-action="restore-example">${ICONS.refresh}<span>恢复示例</span></button>
+            <button class="button" type="button" data-action="import-json">${ICONS.upload}<span>导入 JSON</span></button>
+          </div>
+        </header>
+
+        <main class="library-layout">
+          <section class="intro-panel" aria-labelledby="new-project-title">
+            <div class="intro-heading">
+              <p class="eyebrow">Beat-first production</p>
+              <h1>从一个想法，排到每一个 Beat。</h1>
+              <p>第一版只做本地稿件编排、视觉类型、来源记录和文件导出。数据不会离开这台浏览器。</p>
+            </div>
+            <form class="create-form" id="new-project-form">
+              <h2 class="field-label" id="new-project-title">新建项目</h2>
+              <label class="field">
+                <span>项目名称</span>
+                <input class="input" id="new-project-name" name="name" required maxlength="120" placeholder="例如：三分钟讲清楚一个信息差">
+              </label>
+              <div class="field">
+                <span>创作模式</span>
+                <div class="mode-picker">
+                  <label class="mode-option">
+                    <input type="radio" name="mode" value="explainer" checked>
+                    <strong>观点解释</strong>
+                    <span>科普、信息差和个人观点</span>
+                  </label>
+                  <label class="mode-option">
+                    <input type="radio" name="mode" value="expressive">
+                    <strong>主观表达</strong>
+                    <span>书、电影、音乐与文艺心得</span>
+                  </label>
+                </div>
+              </div>
+              <label class="field">
+                <span>原始稿件</span>
+                <textarea class="textarea" id="new-project-manuscript" name="manuscript" placeholder="粘贴稿件。空行和句末标点会用于初步拆分 Beat。"></textarea>
+              </label>
+              <label class="switch-row">
+                <span>
+                  自动拆分 Beat
+                  <small>按空行和句末标点拆成多张卡片</small>
+                </span>
+                <input type="checkbox" id="auto-split" checked>
+              </label>
+              <div class="form-notice" id="create-form-notice" role="alert"></div>
+              <button class="button primary" type="submit">${ICONS.plus}<span>创建项目</span></button>
+            </form>
+          </section>
+
+          <section class="project-panel" aria-labelledby="project-list-title">
+            <div class="panel-head">
+              <div>
+                <h2 id="project-list-title">本地项目</h2>
+                <p>${projects.length ? `共 ${projects.length} 个项目，保存在当前浏览器。` : "还没有项目，可以从左侧创建或恢复示例。"} </p>
+              </div>
+            </div>
+            ${projects.length ? `<div class="project-grid">${projects.map(renderProjectCard).join("")}</div>` : `
+              <div class="empty-state">
+                <strong>还没有项目</strong>
+                <p>左侧填写稿件并创建，或者点击右上角恢复示例。</p>
+              </div>
+            `}
+          </section>
+        </main>
+      `;
+    }
+
+    function renderProjectCard(project) {
+      return `
+        <article class="project-card" data-project-id="${escapeHtml(project.id)}">
+          <div class="project-card-top">
+            <input class="project-name-input" value="${escapeHtml(project.name)}" maxlength="120" aria-label="项目名称" data-project-rename="${escapeHtml(project.id)}">
+            ${modePill(project.mode)}
+          </div>
+          <div class="project-meta">
+            <div class="metric"><strong>${project.beats.length}</strong><span>Beat</span></div>
+            <div class="metric"><strong>${formatDuration(projectDuration(project))}</strong><span>预计时长</span></div>
+            <div class="metric"><strong>${project.beats.filter(function (beat) { return !beat.source.trim(); }).length}</strong><span>缺来源</span></div>
+          </div>
+          <div class="project-footer">
+            <small>修改于 ${formatDate(project.updatedAt)}</small>
+            <div class="card-actions">
+              <button class="button small primary" type="button" data-action="open-project" data-id="${escapeHtml(project.id)}">打开</button>
+              <button class="button small icon-only" type="button" title="导出项目 JSON" aria-label="导出项目 JSON" data-action="export-project-json" data-id="${escapeHtml(project.id)}">${ICONS.download}</button>
+              <button class="button small icon-only danger" type="button" title="删除项目" aria-label="删除项目" data-action="delete-project" data-id="${escapeHtml(project.id)}">${ICONS.trash}</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderWorkspace() {
+      const project = getProject();
+      if (!project) {
+        renderLibrary();
+        return;
+      }
+
+      const app = document.getElementById("app");
+      app.innerHTML = `
+        <header class="app-header">
+          <div class="workspace-header-title">
+            <button class="button icon-only ghost" type="button" aria-label="返回项目库" title="返回项目库" data-action="back-library">${ICONS.back}</button>
+            <div>
+              <div class="brand-copy">
+                <strong>${escapeHtml(project.name)}</strong>
+                <span>Beat 编排工作台</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <span class="save-indicator" data-save-indicator data-state="saved">已保存</span>
+            <button class="button" type="button" data-action="import-json">${ICONS.upload}<span>导入 JSON</span></button>
+            <button class="button" type="button" data-action="export-project-json" data-id="${escapeHtml(project.id)}">${ICONS.download}<span>项目 JSON</span></button>
+          </div>
+        </header>
+
+        <main class="workspace-layout">
+          <aside class="workspace-sidebar">
+            <section class="sidebar-block">
+              <label class="sidebar-label" for="workspace-project-name">项目名称</label>
+              <input class="project-title-input" id="workspace-project-name" value="${escapeHtml(project.name)}" maxlength="120" data-project-name>
+              <div class="field" style="margin-top: 12px;">
+                <label class="sidebar-label" for="workspace-project-mode">默认模式</label>
+                <select class="select" id="workspace-project-mode" data-project-mode>
+                  ${Object.entries(MODES).map(function (entry) {
+                    return `<option value="${entry[0]}"${project.mode === entry[0] ? " selected" : ""}>${escapeHtml(entry[1].label)}</option>`;
+                  }).join("")}
+                </select>
+              </div>
+            </section>
+
+            <section class="sidebar-block">
+              <span class="sidebar-label">项目摘要</span>
+              <div class="stats-stack" id="project-summary"></div>
+            </section>
+
+            <section class="sidebar-block">
+              <details class="manuscript-box">
+                <summary>原始稿件与重新拆分</summary>
+                <textarea class="textarea" data-manuscript placeholder="原始稿件">${escapeHtml(project.manuscript)}</textarea>
+                <button class="button small" style="margin-top: 10px;" type="button" data-action="resplit">${ICONS.refresh}<span>按稿件重新拆分</span></button>
+              </details>
+            </section>
+
+            <section class="sidebar-block">
+              <span class="sidebar-label">本地操作</span>
+              <div class="mode-actions">
+                <button class="button small" type="button" data-action="restore-example">${ICONS.plus}<span>恢复示例项目</span></button>
+              </div>
+            </section>
+          </aside>
+
+          <section class="beat-board" aria-labelledby="beat-board-title">
+            <div class="beat-board-head">
+              <div>
+                <h2 id="beat-board-title">Beat 卡片</h2>
+                <p>每个 Beat 都保留完整的十项创作字段。拖动左侧把手或使用上下按钮排序。</p>
+              </div>
+              <div class="card-actions">
+                <button class="button" type="button" data-action="export-markdown">${ICONS.markdown}<span>Markdown</span></button>
+                <button class="button" type="button" data-action="export-csv">${ICONS.download}<span>CSV</span></button>
+                <button class="button primary" type="button" data-action="add-beat">${ICONS.plus}<span>新增 Beat</span></button>
+              </div>
+            </div>
+            <div class="beat-list" id="beat-list">
+              ${project.beats.length ? project.beats.map(function (beat, index) {
+                return renderBeatCard(project, beat, index);
+              }).join("") : `
+                <div class="empty-state">
+                  <strong>还没有 Beat</strong>
+                  <p>点击“新增 Beat”，或打开原始稿件并重新拆分。</p>
+                </div>
+              `}
+            </div>
+          </section>
+        </main>
+      `;
+
+      updateSummary();
+    }
+
+    function renderBeatCard(project, beat, index) {
+      const collapsed = state.runtime.collapsedBeats.has(beat.id);
+      const chartValue = Object.prototype.hasOwnProperty.call(state.runtime.chartDrafts, beat.id)
+        ? state.runtime.chartDrafts[beat.id]
+        : beat.chart_data
+          ? JSON.stringify(beat.chart_data, null, 2)
+          : "";
+      const sourceReady = Boolean(String(beat.source || "").trim());
+      const rightsReady = Boolean(String(beat.rights || "").trim()) && !/待确认|未知|unknown/i.test(String(beat.rights || ""));
+
+      return `
+        <article class="beat-card${collapsed ? " collapsed" : ""}" data-beat-id="${escapeHtml(beat.id)}">
+          <div class="beat-rail">
+            <div class="beat-number">${String(index + 1).padStart(2, "0")}</div>
+            <button class="drag-handle" type="button" draggable="true" title="拖动排序" aria-label="拖动 Beat 排序" data-drag-handle="${escapeHtml(beat.id)}">${ICONS.grip}</button>
+          </div>
+          <div class="beat-content">
+            <div class="beat-head">
+              <div class="beat-head-main">
+                <div class="beat-preview" data-beat-preview>${escapeHtml(beat.text || "未填写正文")}</div>
+                <div class="beat-summary">
+                  ${modePill(beat.mode)}
+                  <span class="pill" data-duration-pill>${escapeHtml(formatDuration(beat.duration))}</span>
+                  <span class="pill ${sourceReady ? "explainer" : "accent"}" data-source-pill>${sourceReady ? "有来源" : "缺来源"}</span>
+                  <span class="pill ${rightsReady ? "explainer" : "accent"}" data-rights-pill>${rightsReady ? "权利已记录" : "待确认权利"}</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="button small icon-only" type="button" title="上移" aria-label="上移 Beat" data-action="move-beat-up" data-id="${escapeHtml(beat.id)}"${index === 0 ? " disabled" : ""}>${ICONS.up}</button>
+                <button class="button small icon-only" type="button" title="下移" aria-label="下移 Beat" data-action="move-beat-down" data-id="${escapeHtml(beat.id)}"${index === project.beats.length - 1 ? " disabled" : ""}>${ICONS.down}</button>
+                <button class="button small icon-only" type="button" title="复制 Beat" aria-label="复制 Beat" data-action="copy-beat" data-id="${escapeHtml(beat.id)}">${ICONS.copy}</button>
+                <button class="button small icon-only" type="button" title="折叠或展开" aria-label="折叠或展开 Beat" data-action="toggle-beat" data-id="${escapeHtml(beat.id)}"><span class="${collapsed ? "rotate-180" : ""}">${ICONS.chevron}</span></button>
+                <button class="button small icon-only danger" type="button" title="删除 Beat" aria-label="删除 Beat" data-action="delete-beat" data-id="${escapeHtml(beat.id)}">${ICONS.trash}</button>
+              </div>
+            </div>
+
+            <div class="beat-fields">
+              <div class="beat-grid">
+                <label class="beat-field">
+                  <span>mode</span>
+                  <select class="select" data-beat-field="mode" data-beat-id="${escapeHtml(beat.id)}">
+                    ${Object.entries(MODES).map(function (entry) {
+                      return `<option value="${entry[0]}"${beat.mode === entry[0] ? " selected" : ""}>${escapeHtml(entry[1].label)}</option>`;
+                    }).join("")}
+                  </select>
+                </label>
+                <label class="beat-field">
+                  <span>duration / 秒</span>
+                  <input class="input" type="number" min="0.1" step="0.1" value="${escapeHtml(beat.duration)}" data-beat-field="duration" data-beat-id="${escapeHtml(beat.id)}">
+                  <span class="field-error"></span>
+                </label>
+                <label class="beat-field">
+                  <span>visual_kind</span>
+                  <select class="select" data-beat-field="visual_kind" data-beat-id="${escapeHtml(beat.id)}">
+                    ${Object.entries(VISUAL_KINDS).map(function (entry) {
+                      return `<option value="${entry[0]}"${beat.visual_kind === entry[0] ? " selected" : ""}>${escapeHtml(entry[1])}</option>`;
+                    }).join("")}
+                  </select>
+                </label>
+              </div>
+
+              <label class="beat-field text-field">
+                <span>text</span>
+                <textarea class="textarea" data-beat-field="text" data-beat-id="${escapeHtml(beat.id)}">${escapeHtml(beat.text)}</textarea>
+              </label>
+
+              <label class="beat-field">
+                <span>visual_brief</span>
+                <textarea class="textarea" data-beat-field="visual_brief" data-beat-id="${escapeHtml(beat.id)}">${escapeHtml(beat.visual_brief)}</textarea>
+              </label>
+
+              <details class="advanced-fields">
+                <summary>更多字段：prompt、chart_data、audio_hint、source、rights</summary>
+                <div class="advanced-grid">
+                  <label class="beat-field wide">
+                    <span>prompt</span>
+                    <textarea class="textarea" data-beat-field="prompt" data-beat-id="${escapeHtml(beat.id)}" placeholder="只保存在本地，不发送给任何服务。">${escapeHtml(beat.prompt)}</textarea>
+                  </label>
+                  <label class="beat-field wide">
+                    <span>chart_data / JSON</span>
+                    <textarea class="textarea code-input" data-beat-field="chart_data" data-beat-id="${escapeHtml(beat.id)}" placeholder='例如 {"kind":"bar","title":"示例","series":[{"name":"数据","values":[1,2]}]}'>${escapeHtml(chartValue)}</textarea>
+                    <span class="field-error" data-chart-error></span>
+                  </label>
+                  <label class="beat-field wide">
+                    <span>audio_hint</span>
+                    <textarea class="textarea" data-beat-field="audio_hint" data-beat-id="${escapeHtml(beat.id)}">${escapeHtml(beat.audio_hint)}</textarea>
+                  </label>
+                  <label class="beat-field">
+                    <span>source</span>
+                    <textarea class="textarea" data-beat-field="source" data-beat-id="${escapeHtml(beat.id)}" placeholder="多个来源按行记录">${escapeHtml(beat.source)}</textarea>
+                  </label>
+                  <label class="beat-field">
+                    <span>rights</span>
+                    <textarea class="textarea" data-beat-field="rights" data-beat-id="${escapeHtml(beat.id)}" placeholder="例如：原创、已授权、引用、待确认">${escapeHtml(beat.rights)}</textarea>
+                  </label>
+                </div>
+              </details>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function updateSummary() {
+      const project = getProject();
+      const summary = document.getElementById("project-summary");
+      if (!project || !summary) {
+        return;
+      }
+      const missingSource = project.beats.filter(function (beat) {
+        return !String(beat.source || "").trim();
+      }).length;
+      const pendingRights = project.beats.filter(function (beat) {
+        const rights = String(beat.rights || "").trim();
+        return !rights || /待确认|未知|unknown/i.test(rights);
+      }).length;
+      const chartCount = project.beats.filter(function (beat) {
+        return beat.visual_kind === "chart" || beat.chart_data;
+      }).length;
+
+      summary.innerHTML = `
+        <div class="stat-row"><span>Beat 数量</span><strong>${project.beats.length}</strong></div>
+        <div class="stat-row"><span>预计总时长</span><strong>${escapeHtml(formatDuration(projectDuration(project)))}</strong></div>
+        <div class="stat-row"><span>图表 Beat</span><strong>${chartCount}</strong></div>
+        <div class="stat-row"><span>缺少来源</span><strong>${missingSource}</strong></div>
+        <div class="stat-row"><span>待确认权利</span><strong>${pendingRights}</strong></div>
+      `;
+    }
+
+    function syncBeatCard(beat) {
+      const card = document.querySelector(`.beat-card[data-beat-id="${CSS.escape(beat.id)}"]`);
+      if (!card) {
+        return;
+      }
+      const preview = card.querySelector("[data-beat-preview]");
+      const durationPill = card.querySelector("[data-duration-pill]");
+      const sourcePill = card.querySelector("[data-source-pill]");
+      const rightsPill = card.querySelector("[data-rights-pill]");
+      const sourceReady = Boolean(String(beat.source || "").trim());
+      const rightsReady = Boolean(String(beat.rights || "").trim()) && !/待确认|未知|unknown/i.test(String(beat.rights || ""));
+
+      if (preview) {
+        preview.textContent = beat.text || "未填写正文";
+      }
+      if (durationPill) {
+        durationPill.textContent = formatDuration(beat.duration);
+      }
+      if (sourcePill) {
+        sourcePill.textContent = sourceReady ? "有来源" : "缺来源";
+        sourcePill.className = `pill ${sourceReady ? "explainer" : "accent"}`;
+      }
+      if (rightsPill) {
+        rightsPill.textContent = rightsReady ? "权利已记录" : "待确认权利";
+        rightsPill.className = `pill ${rightsReady ? "explainer" : "accent"}`;
+      }
+    }
+
+    function createProjectFromForm(form) {
+      const formData = new FormData(form);
+      const name = String(formData.get("name") || "").trim();
+      const mode = String(formData.get("mode") || "explainer");
+      const manuscript = String(formData.get("manuscript") || "").trim();
+      const autoSplit = document.getElementById("auto-split").checked;
+      const notice = document.getElementById("create-form-notice");
+
+      if (!name) {
+        notice.textContent = "请填写项目名称。";
+        notice.classList.add("visible");
+        return;
+      }
+
+      if (!MODES[mode]) {
+        notice.textContent = "请选择有效的创作模式。";
+        notice.classList.add("visible");
+        return;
+      }
+
+      const chunks = autoSplit ? splitManuscript(manuscript) : [manuscript];
+      const beats = chunks.map(function (chunk) {
+        return createBeat(mode, chunk);
+      });
+      const createdAt = nowIso();
+      const project = {
+        id: uid("project"),
+        name,
+        mode,
+        manuscript,
+        beats,
+        createdAt,
+        updatedAt: createdAt
+      };
+
+      state.data.projects.unshift(project);
+      state.data.activeProjectId = project.id;
+      state.data.ui.activeView = "workspace";
+      persistNow();
+      renderApp();
+      showToast("项目已创建，稿件已拆分为 Beat。");
+    }
+
+    function addBeat() {
+      const project = getProject();
+      if (!project) {
+        return;
+      }
+      const beat = createBeat(project.mode, "", {
+        duration: 4,
+        rights: "待确认"
+      });
+      project.beats.push(beat);
+      project.updatedAt = nowIso();
+      persistNow();
+      renderApp();
+      window.requestAnimationFrame(function () {
+        const card = document.querySelector(`.beat-card[data-beat-id="${CSS.escape(beat.id)}"]`);
+        const textarea = card && card.querySelector('[data-beat-field="text"]');
+        if (textarea) {
+          textarea.focus();
+          textarea.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      });
+    }
+
+    function copyBeat(beatId) {
+      const project = getProject();
+      const index = project && project.beats.findIndex(function (beat) {
+        return beat.id === beatId;
+      });
+      if (!project || index < 0) {
+        return;
+      }
+      const copy = JSON.parse(JSON.stringify(project.beats[index]));
+      copy.id = uid("beat");
+      copy.text = copy.text ? `${copy.text}（副本）` : "";
+      project.beats.splice(index + 1, 0, copy);
+      project.updatedAt = nowIso();
+      persistNow();
+      renderApp();
+      showToast("Beat 已复制。");
+    }
+
+    function moveBeat(beatId, delta) {
+      const project = getProject();
+      if (!project) {
+        return;
+      }
+      const index = project.beats.findIndex(function (beat) {
+        return beat.id === beatId;
+      });
+      const nextIndex = index + delta;
+      if (index < 0 || nextIndex < 0 || nextIndex >= project.beats.length) {
+        return;
+      }
+      const item = project.beats.splice(index, 1)[0];
+      project.beats.splice(nextIndex, 0, item);
+      project.updatedAt = nowIso();
+      persistNow();
+      renderApp();
+    }
+
+    function moveBeatBefore(sourceId, targetId) {
+      const project = getProject();
+      if (!project || sourceId === targetId) {
+        return;
+      }
+      const sourceIndex = project.beats.findIndex(function (beat) {
+        return beat.id === sourceId;
+      });
+      const targetIndex = project.beats.findIndex(function (beat) {
+        return beat.id === targetId;
+      });
+      if (sourceIndex < 0 || targetIndex < 0) {
+        return;
+      }
+      const item = project.beats.splice(sourceIndex, 1)[0];
+      const nextTargetIndex = project.beats.findIndex(function (beat) {
+        return beat.id === targetId;
+      });
+      project.beats.splice(nextTargetIndex, 0, item);
+      project.updatedAt = nowIso();
+      persistNow();
+      renderApp();
+    }
+
+    function deleteBeat(beatId) {
+      const project = getProject();
+      const beat = project && getBeat(project, beatId);
+      if (!project || !beat) {
+        return;
+      }
+      openConfirm(
+        "删除 Beat",
+        `确定删除第 ${project.beats.indexOf(beat) + 1} 个 Beat 吗？此操作不能撤销。`,
+        "删除",
+        function () {
+          project.beats = project.beats.filter(function (item) {
+            return item.id !== beatId;
+          });
+          delete state.runtime.chartDrafts[beatId];
+          project.updatedAt = nowIso();
+          persistNow();
+          renderApp();
+          showToast("Beat 已删除。");
+        }
+      );
+    }
+
+    function deleteProject(projectId) {
+      const project = state.data.projects.find(function (item) {
+        return item.id === projectId;
+      });
+      if (!project) {
+        return;
+      }
+      openConfirm(
+        "删除项目",
+        `确定删除“${project.name}”吗？本地原文件不受影响，但项目只能在有 JSON 备份时恢复。`,
+        "删除项目",
+        function () {
+          state.data.projects = state.data.projects.filter(function (item) {
+            return item.id !== projectId;
+          });
+          if (state.data.activeProjectId === projectId) {
+            state.data.activeProjectId = null;
+            state.data.ui.activeView = "library";
+          }
+          persistNow();
+          renderApp();
+          showToast("项目已删除。");
+        }
+      );
+    }
+
+    function resplitProject() {
+      const project = getProject();
+      if (!project) {
+        return;
+      }
+      openConfirm(
+        "重新拆分 Beat",
+        "这会用当前稿件重新生成 Beat，现有 Beat 字段和排序会被替换。建议先导出项目 JSON。",
+        "重新拆分",
+        function () {
+          const chunks = splitManuscript(project.manuscript);
+          project.beats = chunks.map(function (chunk) {
+            return createBeat(project.mode, chunk);
+          });
+          state.runtime.chartDrafts = {};
+          project.updatedAt = nowIso();
+          persistNow();
+          renderApp();
+          showToast("稿件已重新拆分为 Beat。");
+        }
+      );
+    }
+
+    function restoreExample() {
+      const project = createSampleProject();
+      const existingNames = new Set(state.data.projects.map(function (item) {
+        return item.name;
+      }));
+      let baseName = project.name;
+      let suffix = 2;
+      while (existingNames.has(project.name)) {
+        project.name = `${baseName} ${suffix}`;
+        suffix += 1;
+      }
+      state.data.projects.unshift(project);
+      state.data.activeProjectId = project.id;
+      state.data.ui.activeView = "workspace";
+      persistNow();
+      renderApp();
+      showToast("示例项目已恢复。");
+    }
+
+    function openProject(projectId) {
+      const project = state.data.projects.find(function (item) {
+        return item.id === projectId;
+      });
+      if (!project) {
+        showToast("项目不存在。", "error");
+        return;
+      }
+      state.data.activeProjectId = projectId;
+      state.data.ui.activeView = "workspace";
+      scheduleSave();
+      renderApp();
+    }
+
+    function updateBeatField(element) {
+      const project = getProject();
+      if (!project) {
+        return;
+      }
+      const beat = getBeat(project, element.dataset.beatId);
+      if (!beat) {
+        return;
+      }
+      const field = element.dataset.beatField;
+
+      if (field === "duration") {
+        const value = Number(element.value);
+        const error = element.parentElement.querySelector(".field-error");
+        if (!Number.isFinite(value) || value <= 0) {
+          element.dataset.invalid = "true";
+          if (error) {
+            error.textContent = "duration 必须大于 0。";
+          }
+          return;
+        }
+        delete element.dataset.invalid;
+        if (error) {
+          error.textContent = "";
+        }
+        beat.duration = Math.round(value * 10) / 10;
+      } else if (field === "chart_data") {
+        state.runtime.chartDrafts[beat.id] = element.value;
+        const error = element.parentElement.querySelector("[data-chart-error]");
+        if (!element.value.trim()) {
+          beat.chart_data = null;
+          delete element.dataset.invalid;
+          if (error) {
+            error.textContent = "";
+          }
+        } else {
+          try {
+            beat.chart_data = JSON.parse(element.value);
+            delete element.dataset.invalid;
+            if (error) {
+              error.textContent = "";
+            }
+          } catch (parseError) {
+            element.dataset.invalid = "true";
+            if (error) {
+              error.textContent = "JSON 格式无效，现有 chart_data 未被覆盖。";
+            }
+            return;
+          }
+        }
+      } else {
+        beat[field] = element.value;
+        if (field === "visual_kind" && element.value === "chart") {
+          const advanced = element.closest(".beat-card")?.querySelector(".advanced-fields");
+          if (advanced) {
+            advanced.open = true;
+          }
+        }
+      }
+
+      project.updatedAt = nowIso();
+      syncBeatCard(beat);
+      updateSummary();
+      scheduleSave();
+    }
+
+    function openConfirm(title, message, confirmLabel, action) {
+      state.runtime.confirmAction = action;
+      const root = document.getElementById("confirm-root");
+      root.innerHTML = `
+        <div class="confirm-backdrop" role="presentation">
+          <section class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+            <h3 id="confirm-title">${escapeHtml(title)}</h3>
+            <p>${escapeHtml(message)}</p>
+            <div class="confirm-actions">
+              <button class="button" type="button" data-action="cancel-confirm">取消</button>
+              <button class="button danger" type="button" data-action="accept-confirm">${escapeHtml(confirmLabel)}</button>
+            </div>
+          </section>
+        </div>
+      `;
+      const focusTarget = root.querySelector('[data-action="cancel-confirm"]');
+      if (focusTarget) {
+        focusTarget.focus();
+      }
+    }
+
+    function closeConfirm() {
+      state.runtime.confirmAction = null;
+      document.getElementById("confirm-root").innerHTML = "";
+    }
+
+    function showToast(message, type, duration) {
+      const root = document.getElementById("toast-root");
+      const toast = document.createElement("div");
+      toast.className = `toast${type === "error" ? " error" : ""}`;
+      toast.textContent = message;
+      root.appendChild(toast);
+      window.setTimeout(function () {
+        toast.remove();
+      }, duration || 3200);
+    }
+
+    function downloadBlob(filename, content, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(function () {
+        URL.revokeObjectURL(url);
+      }, 0);
+    }
+
+    function buildMarkdown(project) {
+      const lines = [
+        `# ${project.name}`,
+        "",
+        `- 模式：${MODES[project.mode].label}`,
+        `- Beat 数量：${project.beats.length}`,
+        `- 预计总时长：${formatDuration(projectDuration(project))}`,
+        `- 最近修改：${project.updatedAt}`,
+        "",
+        "---",
+        ""
+      ];
+
+      project.beats.forEach(function (beat, index) {
+        lines.push(
+          `## ${String(index + 1).padStart(2, "0")} · ${MODES[beat.mode] ? MODES[beat.mode].label : beat.mode}`,
+          "",
+          `- duration：${beat.duration} 秒`,
+          `- visual_kind：${VISUAL_KINDS[beat.visual_kind] || beat.visual_kind}`,
+          `- source：${beat.source || "未填写"}`,
+          `- rights：${beat.rights || "未填写"}`,
+          "",
+          "### text",
+          "",
+          beat.text || "未填写",
+          "",
+          "### visual_brief",
+          "",
+          beat.visual_brief || "未填写",
+          "",
+          "### prompt",
+          "",
+          beat.prompt || "未填写",
+          "",
+          "### chart_data",
+          "",
+          beat.chart_data ? "```json\n" + JSON.stringify(beat.chart_data, null, 2) + "\n```" : "未填写",
+          "",
+          "### audio_hint",
+          "",
+          beat.audio_hint || "未填写",
+          "",
+          "---",
+          ""
+        );
+      });
+
+      return lines.join("\n");
+    }
+
+    function csvEscape(value) {
+      return `"${String(value ?? "").replace(/"/g, '""')}"`;
+    }
+
+    function buildCsv(project) {
+      const rows = [
+        ["index", "mode", "text", "duration", "visual_kind", "visual_brief", "prompt", "chart_data", "audio_hint", "source", "rights"]
+      ];
+      project.beats.forEach(function (beat, index) {
+        rows.push([
+          index + 1,
+          beat.mode,
+          beat.text || "",
+          beat.duration,
+          beat.visual_kind,
+          beat.visual_brief || "",
+          beat.prompt || "",
+          beat.chart_data ? JSON.stringify(beat.chart_data) : "",
+          beat.audio_hint || "",
+          beat.source || "",
+          beat.rights || ""
+        ]);
+      });
+      return "\uFEFF" + rows.map(function (row) {
+        return row.map(csvEscape).join(",");
+      }).join("\r\n");
+    }
+
+    function exportMarkdown() {
+      const project = getProject();
+      if (!project) {
+        return;
+      }
+      downloadBlob(`${safeFilename(project.name)}-${dateStamp()}.md`, buildMarkdown(project), "text/markdown;charset=utf-8");
+      showToast("Markdown 已导出。");
+    }
+
+    function exportCsv() {
+      const project = getProject();
+      if (!project) {
+        return;
+      }
+      downloadBlob(`${safeFilename(project.name)}-${dateStamp()}.csv`, buildCsv(project), "text/csv;charset=utf-8");
+      showToast("CSV 已导出，文件包含 UTF-8 BOM。");
+    }
+
+    function exportProjectJson(projectId) {
+      const project = state.data.projects.find(function (item) {
+        return item.id === (projectId || state.data.activeProjectId);
+      });
+      if (!project) {
+        showToast("没有可导出的项目。", "error");
+        return;
+      }
+      const payload = {
+        schemaVersion: SCHEMA_VERSION,
+        exportedAt: nowIso(),
+        project
+      };
+      downloadBlob(`${safeFilename(project.name)}-${dateStamp()}.json`, JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+      showToast("项目 JSON 已导出。");
+    }
+
+    function normalizeImportedBeat(raw, index, defaultMode) {
+      if (!raw || typeof raw !== "object") {
+        throw new Error(`第 ${index + 1} 个 Beat 不是有效对象。`);
+      }
+      const mode = MODES[raw.mode] ? raw.mode : defaultMode;
+      const visualKind = VISUAL_KINDS[raw.visual_kind] ? raw.visual_kind : "mixed";
+      const duration = Number(raw.duration);
+      if (!Number.isFinite(duration) || duration <= 0) {
+        throw new Error(`第 ${index + 1} 个 Beat 的 duration 必须大于 0。`);
+      }
+      if (typeof raw.text !== "string") {
+        throw new Error(`第 ${index + 1} 个 Beat 缺少 text。`);
+      }
+      return {
+        id: uid("beat"),
+        mode,
+        text: raw.text,
+        duration: Math.round(duration * 10) / 10,
+        visual_kind: visualKind,
+        visual_brief: typeof raw.visual_brief === "string" ? raw.visual_brief : "",
+        prompt: typeof raw.prompt === "string" ? raw.prompt : "",
+        chart_data: raw.chart_data && typeof raw.chart_data === "object" ? raw.chart_data : null,
+        audio_hint: typeof raw.audio_hint === "string" ? raw.audio_hint : "",
+        source: typeof raw.source === "string" ? raw.source : "",
+        rights: typeof raw.rights === "string" ? raw.rights : "待确认"
+      };
+    }
+
+    function normalizeImportedProject(raw) {
+      if (!raw || typeof raw !== "object") {
+        throw new Error("JSON 中没有有效项目。");
+      }
+      if (!MODES[raw.mode]) {
+        throw new Error("项目 mode 无效。");
+      }
+      if (!Array.isArray(raw.beats)) {
+        throw new Error("项目 beats 必须是数组。");
+      }
+      const beats = raw.beats.map(function (beat, index) {
+        return normalizeImportedBeat(beat, index, raw.mode);
+      });
+      const createdAt = nowIso();
+      return {
+        id: uid("project"),
+        name: typeof raw.name === "string" && raw.name.trim() ? raw.name.trim() : "导入项目",
+        mode: raw.mode,
+        manuscript: typeof raw.manuscript === "string"
+          ? raw.manuscript
+          : beats.map(function (beat) {
+            return beat.text;
+          }).join("\n\n"),
+        beats,
+        createdAt,
+        updatedAt: createdAt
+      };
+    }
+
+    async function importProjectFile(file) {
+      if (!file) {
+        return;
+      }
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (parsed.schemaVersion && parsed.schemaVersion !== SCHEMA_VERSION) {
+          throw new Error(`不支持 schemaVersion ${parsed.schemaVersion}。`);
+        }
+        const previousProjectId = state.data.activeProjectId;
+        const previousView = state.data.ui.activeView;
+        const project = normalizeImportedProject(parsed.project || parsed);
+        state.data.projects.unshift(project);
+        state.data.activeProjectId = project.id;
+        state.data.ui.activeView = "workspace";
+        if (!persistNow()) {
+          state.data.projects = state.data.projects.filter(function (item) {
+            return item.id !== project.id;
+          });
+          state.data.activeProjectId = previousProjectId;
+          state.data.ui.activeView = previousView;
+          return;
+        }
+        renderApp();
+        showToast("JSON 项目已导入。");
+      } catch (error) {
+        showToast(`导入失败：${error.message}`, "error", 6000);
+      } finally {
+        document.getElementById("json-file-input").value = "";
+      }
+    }
+
+    function handleAction(action, element, event) {
+      if (action === "back-library") {
+        persistNow(true);
+        state.data.ui.activeView = "library";
+        renderApp();
+      } else if (action === "open-project") {
+        openProject(element.dataset.id);
+      } else if (action === "add-beat") {
+        addBeat();
+      } else if (action === "copy-beat") {
+        copyBeat(element.dataset.id);
+      } else if (action === "delete-beat") {
+        deleteBeat(element.dataset.id);
+      } else if (action === "move-beat-up") {
+        moveBeat(element.dataset.id, -1);
+      } else if (action === "move-beat-down") {
+        moveBeat(element.dataset.id, 1);
+      } else if (action === "toggle-beat") {
+        const beatId = element.dataset.id;
+        if (state.runtime.collapsedBeats.has(beatId)) {
+          state.runtime.collapsedBeats.delete(beatId);
+        } else {
+          state.runtime.collapsedBeats.add(beatId);
+        }
+        const card = element.closest(".beat-card");
+        if (card) {
+          card.classList.toggle("collapsed");
+          element.firstElementChild.classList.toggle("rotate-180");
+        }
+      } else if (action === "delete-project") {
+        deleteProject(element.dataset.id);
+      } else if (action === "export-project-json") {
+        exportProjectJson(element.dataset.id);
+      } else if (action === "export-markdown") {
+        exportMarkdown();
+      } else if (action === "export-csv") {
+        exportCsv();
+      } else if (action === "import-json") {
+        document.getElementById("json-file-input").click();
+      } else if (action === "restore-example") {
+        restoreExample();
+      } else if (action === "resplit") {
+        resplitProject();
+      } else if (action === "cancel-confirm") {
+        closeConfirm();
+      } else if (action === "accept-confirm") {
+        const confirmAction = state.runtime.confirmAction;
+        closeConfirm();
+        if (typeof confirmAction === "function") {
+          confirmAction();
+        }
+      }
+
+      if (event) {
+        event.preventDefault();
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      const actionElement = event.target.closest("[data-action]");
+      if (actionElement) {
+        handleAction(actionElement.dataset.action, actionElement, event);
+      }
+    });
+
+    document.addEventListener("submit", function (event) {
+      if (event.target.id === "new-project-form") {
+        event.preventDefault();
+        createProjectFromForm(event.target);
+      }
+    });
+
+    document.addEventListener("input", function (event) {
+      const element = event.target;
+      if (element.matches("[data-project-rename]")) {
+        const project = state.data.projects.find(function (item) {
+          return item.id === element.dataset.projectRename;
+        });
+        if (project) {
+          project.name = element.value;
+          project.updatedAt = nowIso();
+          scheduleSave();
+        }
+      } else if (element.matches("[data-project-name]")) {
+        const project = getProject();
+        if (project) {
+          project.name = element.value;
+          project.updatedAt = nowIso();
+          scheduleSave();
+        }
+      } else if (element.matches("[data-manuscript]")) {
+        const project = getProject();
+        if (project) {
+          project.manuscript = element.value;
+          project.updatedAt = nowIso();
+          scheduleSave();
+        }
+      } else if (element.matches("[data-beat-field]")) {
+        updateBeatField(element);
+      }
+    });
+
+    document.addEventListener("change", function (event) {
+      const element = event.target;
+      if (element.matches("[data-project-mode]")) {
+        const project = getProject();
+        if (project) {
+          project.mode = element.value;
+          project.updatedAt = nowIso();
+          scheduleSave();
+          showToast("默认模式已更新，现有 Beat 不会自动改变。");
+        }
+      } else if (element.matches("[data-beat-field]")) {
+        updateBeatField(element);
+      } else if (element.id === "json-file-input") {
+        importProjectFile(element.files && element.files[0]);
+      }
+    });
+
+    document.addEventListener("dragstart", function (event) {
+      const handle = event.target.closest("[data-drag-handle]");
+      if (!handle) {
+        return;
+      }
+      state.runtime.dragBeatId = handle.dataset.dragHandle;
+      const card = handle.closest(".beat-card");
+      if (card) {
+        card.classList.add("dragging");
+      }
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", state.runtime.dragBeatId);
+    });
+
+    document.addEventListener("dragover", function (event) {
+      const card = event.target.closest(".beat-card");
+      if (!card || !state.runtime.dragBeatId) {
+        return;
+      }
+      event.preventDefault();
+      document.querySelectorAll(".beat-card.drag-over").forEach(function (node) {
+        if (node !== card) {
+          node.classList.remove("drag-over");
+        }
+      });
+      card.classList.add("drag-over");
+    });
+
+    document.addEventListener("drop", function (event) {
+      const card = event.target.closest(".beat-card");
+      if (!card || !state.runtime.dragBeatId) {
+        return;
+      }
+      event.preventDefault();
+      const sourceId = state.runtime.dragBeatId;
+      const targetId = card.dataset.beatId;
+      state.runtime.dragBeatId = null;
+      moveBeatBefore(sourceId, targetId);
+    });
+
+    document.addEventListener("dragend", function () {
+      state.runtime.dragBeatId = null;
+      document.querySelectorAll(".beat-card.dragging, .beat-card.drag-over").forEach(function (node) {
+        node.classList.remove("dragging", "drag-over");
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && state.runtime.confirmAction) {
+        closeConfirm();
+      }
+    });
+
+    window.addEventListener("beforeunload", function () {
+      if (state.runtime.saveTimer) {
+        persistNow(true);
+      }
+    });
+
+    loadState();
+    renderApp();
+  </script>
+</body>
+</html>
